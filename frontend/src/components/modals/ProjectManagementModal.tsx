@@ -93,7 +93,13 @@ export default function ProjectManagementModal({
     }
   };
 
-  const statuses = ["open", "assigned", "in_progress", "completed", "cancelled"];
+  const statuses = [
+    "open",
+    "assigned",
+    "in_progress",
+    "completed",
+    "cancelled",
+  ];
 
   return (
     <AnimatePresence>

@@ -376,7 +376,9 @@ export default function ProblemSolverDashboard() {
         project={selectedProject}
         onRequestWork={handleRequestProject}
         showRequestButton={selectedProject?.status === "open"}
-        showManageButton={user?.role === "admin" || (user?.id === selectedProject?.buyer_id)}
+        showManageButton={
+          user?.role === "admin" || user?.id === selectedProject?.buyer_id
+        }
         onManageClick={() => setShowManagementModal(true)}
       />
 
@@ -384,7 +386,9 @@ export default function ProblemSolverDashboard() {
         isOpen={showManagementModal}
         onClose={() => setShowManagementModal(false)}
         project={selectedProject}
-        isOwner={user?.role === "admin" || user?.id === selectedProject?.buyer_id}
+        isOwner={
+          user?.role === "admin" || user?.id === selectedProject?.buyer_id
+        }
         onProjectUpdated={(updatedProject) => {
           setSelectedProject(updatedProject);
           fetchProjects();
