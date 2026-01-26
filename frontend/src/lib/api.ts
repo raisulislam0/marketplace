@@ -7,6 +7,7 @@ export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Request interceptor to add auth token
@@ -38,5 +39,7 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export default api;
 
 export default api;
