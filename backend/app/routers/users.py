@@ -15,7 +15,7 @@ async def get_all_users(current_user: User = Depends(require_role(["admin"]))):
     db = get_database()
     users = []
     async for user in db.users.find():
-        user["id"] = str(user["_id"])
+        user["id"] = str(user.pop("_id"))
         # Remove hashed_password before creating User object
         user.pop("hashed_password", None)
         try:
@@ -49,8 +49,9 @@ async def assign_role(
     
     if not result:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    result["id"] = str(result["_id"])
+
+    result["id"] = str(result.pop("_id"))
+    result.pop("hashed_password", None)
     return User(**result)
 
 
@@ -60,7 +61,7 @@ async def get_problem_solvers(current_user: User = Depends(get_current_user)):
     db = get_database()
     solvers = []
     async for user in db.users.find({"role": "problem_solver"}):
-        user["id"] = str(user["_id"])
+        user["id"] = str(user.pop("_id"))
         user.pop("hashed_password", None)
         try:
             solvers.append(User(**user))
@@ -87,8 +88,9 @@ async def update_profile(
     
     if not result:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    result["id"] = str(result["_id"])
+
+    result["id"] = str(result.pop("_id"))
+    result.pop("hashed_password", None)
     return User(**result)
 
 

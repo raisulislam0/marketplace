@@ -30,8 +30,9 @@ async def register(user: UserCreate):
     
     result = await db.users.insert_one(user_dict)
     created_user = await db.users.find_one({"_id": result.inserted_id})
-    created_user["id"] = str(created_user["_id"])
-    
+    created_user["id"] = str(created_user.pop("_id"))
+    created_user.pop("hashed_password", None)
+
     return User(**created_user)
 
 

@@ -35,5 +35,6 @@ class Project(ProjectBase):
 
     class Config:
         populate_by_name = True
+        by_alias = False  # Don't use alias in JSON output
         json_encoders = {ObjectId: str}
 

@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
-import api from '@/lib/api';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import api from "@/lib/api";
+import { useToastStore } from "@/store/toastStore";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -11,37 +12,54 @@ interface CreateProjectModalProps {
   onSuccess: () => void;
 }
 
-export default function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProjectModalProps) {
+export default function CreateProjectModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: CreateProjectModalProps) {
+  const { addToast } = useToastStore();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    budget: '',
-    deadline: '',
-    requirements: '',
+    title: "",
+    description: "",
+    budget: "",
+    deadline: "",
+    requirements: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      await api.post('/projects/', {
+      await api.post("/projects/", {
         title: formData.title,
         description: formData.description,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         deadline: formData.deadline || null,
-        requirements: formData.requirements.split(',').map(r => r.trim()).filter(r => r),
+        requirements: formData.requirements
+          .split(",")
+          .map((r) => r.trim())
+          .filter((r) => r),
       });
-      
+
       onSuccess();
       onClose();
-      setFormData({ title: '', description: '', budget: '', deadline: '', requirements: '' });
+      setFormData({
+        title: "",
+        description: "",
+        budget: "",
+        deadline: "",
+        requirements: "",
+      });
+      addToast("Project created successfully!", "success");
     } catch (error) {
-      console.error('Failed to create project:', error);
-      alert('Failed to create project');
+      console.error("Failed to create project:", error);
+      addToast("Failed to create project", "error");
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -56,7 +74,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             className="absolute inset-0 bg-black bg-opacity-50"
             onClick={onClose}
           />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -64,8 +82,13 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">Create New Project</h2>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Create New Project
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -143,7 +166,11 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
-                <button type="button" onClick={onClose} className="btn-secondary">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-secondary"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary">
@@ -157,4 +184,3 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     </AnimatePresence>
   );
 }
-

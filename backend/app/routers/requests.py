@@ -44,8 +44,8 @@ async def create_request(
     
     result = await db.requests.insert_one(request_dict)
     created_request = await db.requests.find_one({"_id": result.inserted_id})
-    created_request["id"] = str(created_request["_id"])
-    
+    created_request["id"] = str(created_request.pop("_id"))
+
     return Request(**created_request)
 
 
@@ -68,9 +68,9 @@ async def get_project_requests(
     
     requests = []
     async for req in db.requests.find({"project_id": project_id}):
-        req["id"] = str(req["_id"])
+        req["id"] = str(req.pop("_id"))
         requests.append(Request(**req))
-    
+
     return requests
 
 
@@ -122,6 +122,6 @@ async def update_request_status(
             {"$set": {"status": "rejected", "updated_at": datetime.utcnow()}}
         )
     
-    result["id"] = str(result["_id"])
+    result["id"] = str(result.pop("_id"))
     return Request(**result)
 

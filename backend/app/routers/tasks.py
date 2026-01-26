@@ -42,8 +42,8 @@ async def create_task(
     
     result = await db.tasks.insert_one(task_dict)
     created_task = await db.tasks.find_one({"_id": result.inserted_id})
-    created_task["id"] = str(created_task["_id"])
-    
+    created_task["id"] = str(created_task.pop("_id"))
+
     return Task(**created_task)
 
 
@@ -70,9 +70,9 @@ async def get_project_tasks(
     
     tasks = []
     async for task in db.tasks.find({"project_id": project_id}):
-        task["id"] = str(task["_id"])
+        task["id"] = str(task.pop("_id"))
         tasks.append(Task(**task))
-    
+
     return tasks
 
 
@@ -102,8 +102,8 @@ async def update_task(
         {"$set": update_data},
         return_document=True
     )
-    
-    result["id"] = str(result["_id"])
+
+    result["id"] = str(result.pop("_id"))
     return Task(**result)
 
 
@@ -150,7 +150,7 @@ async def submit_task(
         return_document=True
     )
 
-    result["id"] = str(result["_id"])
+    result["id"] = str(result.pop("_id"))
     return Task(**result)
 
 
@@ -191,6 +191,6 @@ async def review_task(
         return_document=True
     )
 
-    result["id"] = str(result["_id"])
+    result["id"] = str(result.pop("_id"))
     return Task(**result)
 

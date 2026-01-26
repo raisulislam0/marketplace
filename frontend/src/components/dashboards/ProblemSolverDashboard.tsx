@@ -1,22 +1,37 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { FolderKanban, ListTodo, User } from 'lucide-react';
-import api from '@/lib/api';
-import { Project, Task } from '@/types';
-import ProjectCard from '@/components/cards/ProjectCard';
-import CreateTaskModal from '@/components/modals/CreateTaskModal';
-import TaskCard from '@/components/cards/TaskCard';
-import ProfileModal from '@/components/modals/ProfileModal';
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  FolderKanban,
+  ListTodo,
+  User,
+  Briefcase,
+  Award,
+  ExternalLink,
+} from "lucide-react";
+import api from "@/lib/api";
+import { Project, Task } from "@/types";
+import ProjectCard from "@/components/cards/ProjectCard";
+import CreateTaskModal from "@/components/modals/CreateTaskModal";
+import TaskCard from "@/components/cards/TaskCard";
+import ProfileModal from "@/components/modals/ProfileModal";
+import ProjectDetailsModal from "@/components/modals/ProjectDetailsModal";
+import ProjectManagementModal from "@/components/modals/ProjectManagementModal";
+import { useToastStore } from "@/store/toastStore";
+import { useAuthStore } from "@/store/authStore";
 
 export default function ProblemSolverDashboard() {
+  const { addToast } = useToastStore();
+  const { user } = useAuthStore();
   const [projects, setProjects] = useState<Project[]>([]);
   const [myProjects, setMyProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showProjectDetailsModal, setShowProjectDetailsModal] = useState(false);
+  const [showManagementModal, setShowManagementModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,20 +40,22 @@ export default function ProblemSolverDashboard() {
 
   const fetchProjects = async () => {
     try {
-      const response = await api.get('/projects/');
+      const response = await api.get("/projects/");
       const allProjects = response.data;
-      setProjects(allProjects.filter((p: Project) => p.status === 'open'));
-      setMyProjects(allProjects.filter((p: Project) => p.status !== 'open'));
-      
+      setProjects(allProjects.filter((p: Project) => p.status === "open"));
+      setMyProjects(allProjects.filter((p: Project) => p.status !== "open"));
+
       // Fetch tasks for assigned projects
-      if (allProjects.filter((p: Project) => p.status !== 'open').length > 0) {
-        const assignedProject = allProjects.find((p: Project) => p.status !== 'open');
+      if (allProjects.filter((p: Project) => p.status !== "open").length > 0) {
+        const assignedProject = allProjects.find(
+          (p: Project) => p.status !== "open",
+        );
         if (assignedProject) {
           fetchTasks(assignedProject.id);
         }
       }
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
+      console.error("Failed to fetch projects:", error);
     } finally {
       setLoading(false);
     }
@@ -49,19 +66,42 @@ export default function ProblemSolverDashboard() {
       const response = await api.get(`/tasks/project/${projectId}`);
       setTasks(response.data);
     } catch (error) {
-      console.error('Failed to fetch tasks:', error);
+      console.error("Failed to fetch tasks:", error);
     }
+  };
+
+  const handleProjectClick = (project: Project) => {
+    setSelectedProject(project);
+    setShowProjectDetailsModal(true);
   };
 
   const handleRequestProject = async (projectId: string) => {
     try {
-      await api.post('/requests/', {
+      if (!projectId) {
+        addToast("Project ID is missing", "error");
+        return;
+      }
+
+      console.log("Sending request for project:", projectId);
+
+      const response = await api.post("/requests/", {
         project_id: projectId,
-        message: 'I would like to work on this project'
+        message: "I would like to work on this project",
       });
-      alert('Request sent successfully!');
+
+      console.log("Request successful:", response.data);
+      addToast("Request sent successfully!", "success");
+      setShowProjectDetailsModal(false);
+
+      // Refresh projects to update status
+      fetchProjects();
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to send request');
+      console.error("Request failed:", error);
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.message ||
+        "Failed to send request";
+      addToast(errorMessage, "error");
     }
   };
 
@@ -83,25 +123,28 @@ export default function ProblemSolverDashboard() {
         fetchTasks(selectedProject.id);
       }
     } catch (error) {
-      console.error('Failed to update task:', error);
+      console.error("Failed to update task:", error);
     }
   };
 
   const handleFileUpload = async (taskId: string, file: File) => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      
+      formData.append("file", file);
+
       await api.post(`/tasks/${taskId}/submit`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      
+
       if (selectedProject) {
         fetchTasks(selectedProject.id);
       }
-      alert('Task submitted successfully!');
+      addToast("Task submitted successfully!", "success");
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to submit task');
+      addToast(
+        error.response?.data?.detail || "Failed to submit task",
+        "error",
+      );
     }
   };
 
@@ -117,7 +160,9 @@ export default function ProblemSolverDashboard() {
         className="flex justify-between items-center"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Problem Solver Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Problem Solver Dashboard
+          </h1>
           <p className="text-gray-600">Browse projects and manage your tasks</p>
         </div>
         <motion.button
@@ -131,6 +176,77 @@ export default function ProblemSolverDashboard() {
         </motion.button>
       </motion.div>
 
+      {/* Profile Section */}
+      {user?.profile && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="card"
+        >
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-xl font-bold text-gray-800">My Profile</h2>
+          </div>
+
+          {user.profile.bio && (
+            <div className="mb-4">
+              <p className="text-gray-700">{user.profile.bio}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {user.profile.skills && user.profile.skills.length > 0 && (
+              <div>
+                <div className="flex items-center text-sm font-medium text-gray-600 mb-2">
+                  <Award className="w-4 h-4 mr-2" />
+                  <span>Skills</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {user.profile.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {user.profile.experience_years && (
+              <div>
+                <div className="flex items-center text-sm font-medium text-gray-600 mb-2">
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  <span>Experience</span>
+                </div>
+                <p className="text-gray-700">
+                  {user.profile.experience_years}{" "}
+                  {user.profile.experience_years === 1 ? "year" : "years"}
+                </p>
+              </div>
+            )}
+
+            {user.profile.portfolio_url && (
+              <div>
+                <div className="flex items-center text-sm font-medium text-gray-600 mb-2">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  <span>Portfolio</span>
+                </div>
+                <a
+                  href={user.profile.portfolio_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-600 hover:text-primary-700 hover:underline"
+                >
+                  {user.profile.portfolio_url}
+                </a>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div
@@ -142,7 +258,9 @@ export default function ProblemSolverDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Available Projects</p>
-              <p className="text-3xl font-bold text-gray-800">{projects.length}</p>
+              <p className="text-3xl font-bold text-gray-800">
+                {projects.length}
+              </p>
             </div>
             <FolderKanban className="w-12 h-12 text-primary-600" />
           </div>
@@ -157,7 +275,9 @@ export default function ProblemSolverDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">My Projects</p>
-              <p className="text-3xl font-bold text-gray-800">{myProjects.length}</p>
+              <p className="text-3xl font-bold text-gray-800">
+                {myProjects.length}
+              </p>
             </div>
             <FolderKanban className="w-12 h-12 text-green-600" />
           </div>
@@ -182,12 +302,16 @@ export default function ProblemSolverDashboard() {
       {/* My Projects & Tasks */}
       {myProjects.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800">My Projects & Tasks</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            My Projects & Tasks
+          </h2>
           {myProjects.map((project) => (
             <div key={project.id} className="card">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">{project.title}</h3>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {project.title}
+                  </h3>
                   <p className="text-gray-600 mt-1">{project.description}</p>
                 </div>
                 <motion.button
@@ -199,17 +323,19 @@ export default function ProblemSolverDashboard() {
                   Add Task
                 </motion.button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                {tasks.filter(t => t.project_id === project.id).map((task, index) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    index={index}
-                    onStatusChange={handleTaskUpdate}
-                    onFileUpload={handleFileUpload}
-                  />
-                ))}
+                {tasks
+                  .filter((t) => t.project_id === project.id)
+                  .map((task, index) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      index={index}
+                      onStatusChange={handleTaskUpdate}
+                      onFileUpload={handleFileUpload}
+                    />
+                  ))}
               </div>
             </div>
           ))}
@@ -224,9 +350,8 @@ export default function ProblemSolverDashboard() {
             <ProjectCard
               key={project.id}
               project={project}
-              onClick={() => handleRequestProject(project.id)}
+              onClick={() => handleProjectClick(project)}
               index={index}
-              showRequestButton
             />
           ))}
         </div>
@@ -244,7 +369,27 @@ export default function ProblemSolverDashboard() {
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
       />
+
+      <ProjectDetailsModal
+        isOpen={showProjectDetailsModal}
+        onClose={() => setShowProjectDetailsModal(false)}
+        project={selectedProject}
+        onRequestWork={handleRequestProject}
+        showRequestButton={selectedProject?.status === "open"}
+        showManageButton={user?.role === "admin" || (user?.id === selectedProject?.buyer_id)}
+        onManageClick={() => setShowManagementModal(true)}
+      />
+
+      <ProjectManagementModal
+        isOpen={showManagementModal}
+        onClose={() => setShowManagementModal(false)}
+        project={selectedProject}
+        isOwner={user?.role === "admin" || user?.id === selectedProject?.buyer_id}
+        onProjectUpdated={(updatedProject) => {
+          setSelectedProject(updatedProject);
+          fetchProjects();
+        }}
+      />
     </div>
   );
 }
-

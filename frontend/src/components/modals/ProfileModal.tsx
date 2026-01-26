@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
-import api from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import { useToastStore } from "@/store/toastStore";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -13,45 +14,53 @@ interface ProfileModalProps {
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const { user, setUser } = useAuthStore();
+  const { addToast } = useToastStore();
   const [formData, setFormData] = useState({
-    bio: '',
-    skills: '',
-    experience_years: '',
-    portfolio_url: '',
+    bio: "",
+    skills: "",
+    experience_years: "",
+    portfolio_url: "",
   });
 
   useEffect(() => {
     if (user?.profile) {
       setFormData({
-        bio: user.profile.bio || '',
-        skills: user.profile.skills?.join(', ') || '',
-        experience_years: user.profile.experience_years?.toString() || '',
-        portfolio_url: user.profile.portfolio_url || '',
+        bio: user.profile.bio || "",
+        skills: user.profile.skills?.join(", ") || "",
+        experience_years: user.profile.experience_years?.toString() || "",
+        portfolio_url: user.profile.portfolio_url || "",
       });
     }
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const response = await api.put('/users/profile', {
+      const response = await api.put("/users/profile", {
         bio: formData.bio,
-        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
-        experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
+        skills: formData.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s),
+        experience_years: formData.experience_years
+          ? parseInt(formData.experience_years)
+          : null,
         portfolio_url: formData.portfolio_url,
       });
-      
+
       setUser(response.data);
       onClose();
-      alert('Profile updated successfully!');
+      addToast("Profile updated successfully!", "success");
     } catch (error) {
-      console.error('Failed to update profile:', error);
-      alert('Failed to update profile');
+      console.error("Failed to update profile:", error);
+      addToast("Failed to update profile", "error");
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -66,7 +75,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             className="absolute inset-0 bg-black bg-opacity-50"
             onClick={onClose}
           />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -75,7 +84,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           >
             <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-lg">
               <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -138,7 +150,11 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
-                <button type="button" onClick={onClose} className="btn-secondary">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-secondary"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary">
@@ -152,4 +168,3 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     </AnimatePresence>
   );
 }
-
