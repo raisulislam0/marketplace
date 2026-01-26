@@ -5,6 +5,7 @@
 CORS (Cross-Origin Resource Sharing) errors occur when a web page tries to make requests to an API on a different domain/port than the page itself.
 
 **Example:**
+
 - Frontend running on: `http://localhost:3001`
 - Backend API on: `http://localhost:8000`
 - Result: CORS error (different ports = different origins)
@@ -16,6 +17,7 @@ CORS (Cross-Origin Resource Sharing) errors occur when a web page tries to make 
 ### Backend Changes (app/main.py)
 
 Updated the CORS middleware to:
+
 1. Accept requests from multiple localhost variants:
    - `http://localhost:3000` (default Next.js port)
    - `http://localhost:3001` (when port 3000 is busy)
@@ -36,6 +38,7 @@ Updated the CORS middleware to:
 ### Frontend Changes (src/lib/api.ts)
 
 Updated the axios configuration to:
+
 1. Add `withCredentials: true` (necessary for cookies and CORS)
 2. Include proper Authorization header with Bearer token
 3. Add detailed console logging for debugging
@@ -52,6 +55,7 @@ Updated the axios configuration to:
 4. Look for the request in the Network tab
 
 ### Expected Headers (Request):
+
 ```
 Origin: http://localhost:3001
 Authorization: Bearer [your-token-here]
@@ -59,6 +63,7 @@ Content-Type: application/json
 ```
 
 ### Expected Headers (Response):
+
 ```
 Access-Control-Allow-Origin: http://localhost:3001
 Access-Control-Allow-Credentials: true
@@ -77,12 +82,14 @@ Access-Control-Allow-Headers: Content-Type, Authorization, ...
 ### 3. Look for CORS Errors
 
 If you see errors like:
+
 ```
-Access to XMLHttpRequest at 'http://localhost:8000/projects/...' from origin 'http://localhost:3001' 
+Access to XMLHttpRequest at 'http://localhost:8000/projects/...' from origin 'http://localhost:3001'
 has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
 ```
 
 This means:
+
 - The backend didn't send the right CORS headers
 - Or the origin (http://localhost:3001) is not in the allowed list
 
@@ -95,11 +102,13 @@ This means:
 **Cause**: Backend CORS not configured properly or your frontend origin not in allowed list
 
 **Solution**:
+
 1. Check your frontend URL (it's in the browser address bar)
 2. Verify this URL is in the backend CORS allowed_origins list
 3. If running on a different port, it needs to be explicitly allowed
 
 **Example** - If frontend is on port 3002:
+
 ```python
 allow_origins=[
     "http://localhost:3002",  # Add this
@@ -112,6 +121,7 @@ allow_origins=[
 **Cause**: Credentials are being sent but CORS headers don't allow it
 
 **Solution**:
+
 - Backend must have: `allow_credentials=True`
 - Frontend must have: `withCredentials: true`
 - Both are already configured in our setup
@@ -121,6 +131,7 @@ allow_origins=[
 **Cause**: The Authorization header is not in the allowed headers list
 
 **Solution**:
+
 - Backend must include "Authorization" in allow_headers
 - This is already configured
 
@@ -129,6 +140,7 @@ allow_origins=[
 **Cause**: Browser sends a preflight OPTIONS request but backend doesn't handle it properly
 
 **Solution**:
+
 - Include OPTIONS in allow_methods: ✅ Done
 - CORS middleware must be added before route handlers: ✅ Already ordered correctly
 
@@ -139,6 +151,7 @@ allow_origins=[
 You can test CORS from the command line to isolate frontend issues:
 
 ### Get a Token First
+
 ```bash
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -148,6 +161,7 @@ curl -X POST http://localhost:8000/auth/login \
 This returns: `{"access_token": "eyJ...", "token_type": "bearer"}`
 
 ### Test a DELETE Request
+
 ```bash
 curl -X DELETE http://localhost:8000/projects/[project-id] \
   -H "Authorization: Bearer eyJ..." \
@@ -162,15 +176,18 @@ curl -X DELETE http://localhost:8000/projects/[project-id] \
 ## Environment Configuration
 
 ### Frontend (.env.local)
+
 ```dotenv
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 **Note**: This file is loaded by Next.js at build time. If you change it:
+
 1. Stop the dev server (Ctrl+C)
 2. Start it again (npm run dev)
 
 ### Backend (.env)
+
 ```dotenv
 MONGODB_URL=mongodb+srv://...
 DATABASE_NAME=marketplace
@@ -205,7 +222,7 @@ If you still get CORS errors:
    - Open DevTools Network tab
    - Click on the failed request
    - Go to Response Headers tab
-   - Look for Access-Control-* headers
+   - Look for Access-Control-\* headers
 
 6. **Restart both servers**:
    - Stop backend: Ctrl+C
@@ -235,17 +252,20 @@ allow_origins=[
 ## Browser DevTools Tips
 
 ### Check Axios Default Headers
+
 In Browser Console:
+
 ```javascript
-import api from '@/lib/api'
-console.log(api.defaults)  // Shows all default configs
+import api from "@/lib/api";
+console.log(api.defaults); // Shows all default configs
 ```
 
 ### Monitor All Network Requests
+
 ```javascript
 // Logs every request and response
-api.interceptors.request.use(config => {
-  console.log('Outgoing request:', config);
+api.interceptors.request.use((config) => {
+  console.log("Outgoing request:", config);
   return config;
 });
 ```
@@ -257,6 +277,7 @@ api.interceptors.request.use(config => {
 When deploying to production, you'll need to:
 
 1. **Update allowed_origins** with your actual domain:
+
 ```python
 allow_origins=[
     "https://yourdomain.com",
@@ -266,6 +287,7 @@ allow_origins=[
 ```
 
 2. **Update frontend API URL** in .env:
+
 ```dotenv
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 ```
