@@ -56,6 +56,7 @@ class UserInDB(UserBase):
 class User(UserBase):
     id: str
     created_at: datetime
+    updated_at: datetime
     profile: Optional[dict] = None
 
     class Config:

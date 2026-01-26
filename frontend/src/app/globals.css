@@ -46,11 +46,18 @@ body {
   }
   
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
+    @apply text-gray-900 bg-white;
+    @apply placeholder:text-gray-400;
+  }
+
+  .input-field:focus {
+    @apply outline-none;
   }
   
   .card {
     @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
   }
 }
+
 

@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'buyer' | 'problem_solver';
+export type UserRole = "admin" | "buyer" | "problem_solver";
 
 export interface User {
   id: string;
@@ -6,6 +6,7 @@ export interface User {
   full_name: string;
   role: UserRole;
   created_at: string;
+  updated_at: string;
   profile?: ProblemSolverProfile;
 }
 
@@ -16,7 +17,12 @@ export interface ProblemSolverProfile {
   portfolio_url?: string;
 }
 
-export type ProjectStatus = 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+export type ProjectStatus =
+  | "open"
+  | "assigned"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export interface Project {
   id: string;
@@ -32,7 +38,7 @@ export interface Project {
   updated_at: string;
 }
 
-export type RequestStatus = 'pending' | 'accepted' | 'rejected';
+export type RequestStatus = "pending" | "accepted" | "rejected";
 
 export interface Request {
   id: string;
@@ -44,7 +50,12 @@ export interface Request {
   updated_at: string;
 }
 
-export type TaskStatus = 'pending' | 'in_progress' | 'submitted' | 'completed' | 'rejected';
+export type TaskStatus =
+  | "pending"
+  | "in_progress"
+  | "submitted"
+  | "completed"
+  | "rejected";
 
 export interface Task {
   id: string;
@@ -78,4 +89,3 @@ export interface AuthResponse {
   access_token: string;
   token_type: string;
 }
-

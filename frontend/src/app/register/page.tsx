@@ -16,6 +16,10 @@ export default function RegisterPage() {
     confirmPassword: '',
   });
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -37,14 +41,10 @@ export default function RegisterPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-12">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 1, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="card max-w-md w-full mx-4"
@@ -77,7 +77,7 @@ export default function RegisterPage() {
               type="text"
               value={formData.full_name}
               onChange={handleChange}
-              className="input-field"
+              className="input-field text-gray-900 bg-white"
               placeholder="John Doe"
               required
             />
@@ -152,4 +152,6 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+
 

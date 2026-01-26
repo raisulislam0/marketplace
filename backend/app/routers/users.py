@@ -16,7 +16,14 @@ async def get_all_users(current_user: User = Depends(require_role(["admin"]))):
     users = []
     async for user in db.users.find():
         user["id"] = str(user["_id"])
-        users.append(User(**user))
+        # Remove hashed_password before creating User object
+        user.pop("hashed_password", None)
+        try:
+            users.append(User(**user))
+        except Exception as e:
+            # Log the error but continue processing other users
+            print(f"Error processing user {user.get('email', 'unknown')}: {e}")
+            continue
     return users
 
 
@@ -54,7 +61,13 @@ async def get_problem_solvers(current_user: User = Depends(get_current_user)):
     solvers = []
     async for user in db.users.find({"role": "problem_solver"}):
         user["id"] = str(user["_id"])
-        solvers.append(User(**user))
+        user.pop("hashed_password", None)
+        try:
+            solvers.append(User(**user))
+        except Exception as e:
+            # Log the error but continue processing other users
+            print(f"Error processing user {user.get('email', 'unknown')}: {e}")
+            continue
     return solvers
 
 
@@ -77,4 +90,6 @@ async def update_profile(
     
     result["id"] = str(result["_id"])
     return User(**result)
+
+
 
