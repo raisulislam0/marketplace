@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Literal
 from datetime import datetime
 from bson import ObjectId
@@ -24,7 +24,7 @@ class TaskUpdate(BaseModel):
 
 
 class Task(TaskBase):
-    id: str = Field(alias="_id")
+    id: str
     project_id: str
     solver_id: str
     status: Literal["pending", "in_progress", "submitted", "completed", "rejected"] = "pending"
@@ -34,8 +34,8 @@ class Task(TaskBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        populate_by_name = True
-        by_alias = False  # Don't use alias in JSON output
-        json_encoders = {ObjectId: str}
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_encoders={ObjectId: str}
+    )
 

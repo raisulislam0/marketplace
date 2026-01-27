@@ -204,15 +204,22 @@ export default function ProjectDetailsModal({
 
               {/* Request Button */}
               {showRequestButton && onRequestWork && (
-                <div className={showManageButton ? "" : "border-t pt-4"}>
+                <div className="border-t pt-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       console.log(
                         "Request button clicked for project:",
-                        project.id,
+                        project,
                       );
+                      console.log("Project ID:", project.id);
+                      console.log("Project ID type:", typeof project.id);
+                      if (!project.id) {
+                        console.error(
+                          "ERROR: Project ID is missing or undefined!",
+                        );
+                      }
                       onRequestWork(project.id);
                     }}
                     className="w-full btn-primary flex items-center justify-center space-x-2 py-3"

@@ -11,6 +11,7 @@ import RequestsList from "@/components/lists/RequestsList";
 import TaskReviewModal from "@/components/modals/TaskReviewModal";
 import ProjectDetailsModal from "@/components/modals/ProjectDetailsModal";
 import ProjectManagementModal from "@/components/modals/ProjectManagementModal";
+import PlanApprovalModal from "@/components/modals/PlanApprovalModal";
 import { useToastStore } from "@/store/toastStore";
 import { useAuthStore } from "@/store/authStore";
 
@@ -21,12 +22,16 @@ export default function BuyerDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [requests, setRequests] = useState<Request[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [showTaskReviewModal, setShowTaskReviewModal] = useState(false);
   const [showProjectDetailsModal, setShowProjectDetailsModal] = useState(false);
   const [showManagementModal, setShowManagementModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showPlanApprovalModal, setShowPlanApprovalModal] = useState(false);
+  const [pendingPlans, setPendingPlans] = useState<any[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
+  const [selectedSolverName, setSelectedSolverName] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -264,7 +269,29 @@ export default function BuyerDashboard() {
           setSelectedProject(updatedProject);
           fetchProjects();
         }}
+        onProjectDeleted={() => {
+          setShowManagementModal(false);
+          setShowProjectDetailsModal(false);
+          setSelectedProject(null);
+          fetchProjects();
+        }}
       />
+
+      {selectedPlan && (
+        <PlanApprovalModal
+          isOpen={showPlanApprovalModal}
+          onClose={() => setShowPlanApprovalModal(false)}
+          plan={selectedPlan}
+          solverName={selectedSolverName}
+          onSuccess={() => {
+            setShowPlanApprovalModal(false);
+            // Refresh plans
+            if (selectedProject) {
+              fetchRequests(selectedProject.id);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -236,6 +236,7 @@ export default function AdminDashboard() {
         onClose={() => setShowProjectDetailsModal(false)}
         project={selectedProject}
         showManageButton={true}
+        showRequestButton={false}
         onManageClick={() => setShowManagementModal(true)}
       />
 
@@ -248,4 +249,13 @@ export default function AdminDashboard() {
           setSelectedProject(updatedProject);
           fetchData();
         }}
+        onProjectDeleted={() => {
+          setShowManagementModal(false);
+          setShowProjectDetailsModal(false);
+          setSelectedProject(null);
+          fetchData();
+        }}
       />
+    </div>
+  );
+}

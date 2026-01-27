@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Literal
 from datetime import datetime
 from bson import ObjectId
@@ -26,15 +26,15 @@ class ProjectUpdate(BaseModel):
 
 
 class Project(ProjectBase):
-    id: str = Field(alias="_id")
+    id: str
     buyer_id: str
     assigned_solver_id: Optional[str] = None
     status: Literal["open", "assigned", "in_progress", "completed", "cancelled"] = "open"
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        populate_by_name = True
-        by_alias = False  # Don't use alias in JSON output
-        json_encoders = {ObjectId: str}
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_encoders={ObjectId: str}
+    )
 

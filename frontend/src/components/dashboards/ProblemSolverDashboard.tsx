@@ -18,6 +18,7 @@ import TaskCard from "@/components/cards/TaskCard";
 import ProfileModal from "@/components/modals/ProfileModal";
 import ProjectDetailsModal from "@/components/modals/ProjectDetailsModal";
 import ProjectManagementModal from "@/components/modals/ProjectManagementModal";
+import PlanSubmissionModal from "@/components/modals/PlanSubmissionModal";
 import { useToastStore } from "@/store/toastStore";
 import { useAuthStore } from "@/store/authStore";
 
@@ -32,6 +33,8 @@ export default function ProblemSolverDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProjectDetailsModal, setShowProjectDetailsModal] = useState(false);
   const [showManagementModal, setShowManagementModal] = useState(false);
+  const [showPlanSubmissionModal, setShowPlanSubmissionModal] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,7 +80,12 @@ export default function ProblemSolverDashboard() {
 
   const handleRequestProject = async (projectId: string) => {
     try {
+      console.log("handleRequestProject called with projectId:", projectId);
+      console.log("projectId type:", typeof projectId);
+      console.log("selectedProject:", selectedProject);
+
       if (!projectId) {
+        console.error("ERROR: Project ID is missing or undefined!");
         addToast("Project ID is missing", "error");
         return;
       }
@@ -90,11 +98,13 @@ export default function ProblemSolverDashboard() {
       });
 
       console.log("Request successful:", response.data);
-      addToast("Request sent successfully!", "success");
+
+      // Store request ID and show plan submission modal
+      setCurrentRequestId(response.data.id);
+      setShowPlanSubmissionModal(true);
       setShowProjectDetailsModal(false);
 
-      // Refresh projects to update status
-      fetchProjects();
+      addToast("Request created! Now submit your work plan.", "success");
     } catch (error: any) {
       console.error("Request failed:", error);
       const errorMessage =
@@ -393,6 +403,26 @@ export default function ProblemSolverDashboard() {
           setSelectedProject(updatedProject);
           fetchProjects();
         }}
+        onProjectDeleted={() => {
+          setShowManagementModal(false);
+          setShowProjectDetailsModal(false);
+          setSelectedProject(null);
+          fetchProjects();
+        }}
+      />
+
+      {selectedProject && currentRequestId && (
+        <PlanSubmissionModal
+          isOpen={showPlanSubmissionModal}
+          onClose={() => setShowPlanSubmissionModal(false)}
+          project={selectedProject}
+          requestId={currentRequestId}
+          onSuccess={() => {
+            setShowPlanSubmissionModal(false);
+            fetchProjects();
+          }}
+        />
+      )}
       />
     </div>
   );

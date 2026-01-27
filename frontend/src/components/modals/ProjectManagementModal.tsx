@@ -14,6 +14,7 @@ interface ProjectManagementModalProps {
   project: Project | null;
   isOwner: boolean;
   onProjectUpdated?: (project: Project) => void;
+  onProjectDeleted?: () => void;
 }
 
 export default function ProjectManagementModal({
@@ -22,6 +23,7 @@ export default function ProjectManagementModal({
   project,
   isOwner,
   onProjectUpdated,
+  onProjectDeleted,
 }: ProjectManagementModalProps) {
   const { addToast } = useToastStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +42,9 @@ export default function ProjectManagementModal({
       await api.delete(`/projects/${project.id}`);
       addToast("Project deleted successfully!", "success");
       onClose();
+      if (onProjectDeleted) {
+        onProjectDeleted();
+      }
     } catch (error: any) {
       addToast(
         error.response?.data?.detail || "Failed to delete project",

@@ -1,23 +1,28 @@
 # CORS Error Fix - Complete Solution
 
 ## Problem
+
 You were getting CORS (Cross-Origin Resource Sharing) errors when trying to make API requests from the frontend to the backend.
 
 ## Root Causes Identified and Fixed
 
 ### 1. **Missing Frontend Origins in CORS Config**
+
 - **Problem**: The backend only allowed `localhost:3000` and `localhost:3001`, but your frontend was running on `localhost:3002`
 - **Solution**: Added `localhost:3002` (and its IP equivalent `127.0.0.1:3002`) to the allowed origins
 
 ### 2. **Incomplete CORS Headers**
+
 - **Problem**: The CORS middleware was using wildcard `["*"]` for methods and headers, which doesn't work properly with credentials
 - **Solution**: Explicitly listed all allowed HTTP methods and headers
 
 ### 3. **Missing `withCredentials` in Frontend**
+
 - **Problem**: The axios client wasn't configured to send credentials (tokens) across origin boundaries
 - **Solution**: Added `withCredentials: true` to the axios configuration
 
 ### 4. **Export Duplication in API File**
+
 - **Problem**: The api.ts file had duplicate `export default api` statements
 - **Solution**: Removed the duplicate export
 
@@ -28,6 +33,7 @@ You were getting CORS (Cross-Origin Resource Sharing) errors when trying to make
 ### Backend: [backend/app/main.py](backend/app/main.py)
 
 **Updated CORS Configuration:**
+
 ```python
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +63,7 @@ app.add_middleware(
 ```
 
 **Key improvements:**
+
 - ✅ Includes all possible localhost variants (3000, 3001, 3002)
 - ✅ Includes both localhost and 127.0.0.1 IP versions
 - ✅ Explicitly lists all HTTP methods including DELETE and OPTIONS
@@ -67,17 +74,19 @@ app.add_middleware(
 ### Frontend: [frontend/src/lib/api.ts](frontend/src/lib/api.ts)
 
 **Updated axios Configuration:**
+
 ```typescript
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,  // NEW: Allow credentials across origins
+  withCredentials: true, // NEW: Allow credentials across origins
 });
 ```
 
 **Kept proper request/response interceptors:**
+
 - Automatically adds Bearer token to all requests
 - Logs when token is found or missing
 - Handles 401 errors by redirecting to login
@@ -90,11 +99,13 @@ export const api = axios.create({
 ### Request Flow
 
 1. **Frontend makes a request** (e.g., DELETE /projects/123)
+
    ```javascript
-   api.delete('/projects/123')  // withCredentials: true
+   api.delete("/projects/123"); // withCredentials: true
    ```
 
 2. **Browser sends preflight OPTIONS request**
+
    ```http
    OPTIONS /projects/123
    Origin: http://localhost:3002
@@ -103,6 +114,7 @@ export const api = axios.create({
    ```
 
 3. **Backend responds with CORS headers**
+
    ```http
    Access-Control-Allow-Origin: http://localhost:3002
    Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
@@ -111,6 +123,7 @@ export const api = axios.create({
    ```
 
 4. **Browser sees headers match, allows actual request**
+
    ```http
    DELETE /projects/123
    Authorization: Bearer [token]
@@ -130,14 +143,14 @@ export const api = axios.create({
 
 After this fix, these frontend URLs will work without CORS errors:
 
-| Protocol | Host | Port | Full URL |
-|----------|------|------|----------|
-| http | localhost | 3000 | http://localhost:3000 |
-| http | localhost | 3001 | http://localhost:3001 |
-| http | localhost | 3002 | http://localhost:3002 |
-| http | 127.0.0.1 | 3000 | http://127.0.0.1:3000 |
-| http | 127.0.0.1 | 3001 | http://127.0.0.1:3001 |
-| http | 127.0.0.1 | 3002 | http://127.0.0.1:3002 |
+| Protocol | Host      | Port | Full URL              |
+| -------- | --------- | ---- | --------------------- |
+| http     | localhost | 3000 | http://localhost:3000 |
+| http     | localhost | 3001 | http://localhost:3001 |
+| http     | localhost | 3002 | http://localhost:3002 |
+| http     | 127.0.0.1 | 3000 | http://127.0.0.1:3000 |
+| http     | 127.0.0.1 | 3001 | http://127.0.0.1:3001 |
+| http     | 127.0.0.1 | 3002 | http://127.0.0.1:3002 |
 
 ---
 
@@ -166,25 +179,32 @@ After this fix, these frontend URLs will work without CORS errors:
 ## What to Do If CORS Still Errors
 
 ### 1. **Check Your Frontend URL**
+
 - Look at your browser address bar
 - Is it `http://localhost:3000`? ✅ Allowed
 - Is it `http://localhost:3002`? ✅ Allowed
 - Is it something else? ❌ Add it to backend CORS config
 
 ### 2. **Verify Backend is Running**
+
 ```bash
 curl http://localhost:8000/health
 ```
+
 Should return: `{"status":"healthy"}`
 
 ### 3. **Verify Frontend is Logged In**
+
 Open Browser DevTools Console:
+
 ```javascript
-localStorage.getItem('token')
+localStorage.getItem("token");
 ```
+
 Should show a token, not `null`
 
 ### 4. **Check Network Request Headers**
+
 1. Open DevTools (F12)
 2. Go to Network tab
 3. Make a request (e.g., try to delete a project)
@@ -194,6 +214,7 @@ Should show a token, not `null`
    - `access-control-allow-credentials: true`
 
 ### 5. **Restart Both Servers**
+
 ```bash
 # Backend
 cd backend
@@ -211,6 +232,7 @@ npm run dev
 ## Testing CORS
 
 ### Manual Test with curl
+
 ```bash
 # Test preflight request
 curl -X OPTIONS http://localhost:8000/projects/ \
@@ -220,7 +242,9 @@ curl -X OPTIONS http://localhost:8000/projects/ \
 ```
 
 ### Automated Test Script
+
 Run the provided test script:
+
 ```bash
 cd backend
 python test_cors.py
@@ -235,6 +259,7 @@ This will test all allowed origins and show which CORS headers are being returne
 When deploying to production, you must:
 
 1. **Change allowed origins** to your actual domain:
+
 ```python
 allow_origins=[
     "https://yourdomain.com",
@@ -246,6 +271,7 @@ allow_origins=[
 2. **Use HTTPS everywhere** - CORS requires HTTPS for production
 
 3. **Update frontend environment** in `.env.local`:
+
 ```dotenv
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 ```
