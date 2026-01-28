@@ -36,6 +36,10 @@ export interface Project {
   status: ProjectStatus;
   created_at: string;
   updated_at: string;
+  buyer_email?: string;
+  buyer_name?: string;
+  solver_email?: string;
+  solver_name?: string;
 }
 
 export type RequestStatus = "pending" | "accepted" | "rejected";
@@ -48,6 +52,8 @@ export interface Request {
   status: RequestStatus;
   created_at: string;
   updated_at: string;
+  solver_email?: string;
+  solver_name?: string;
 }
 
 export type TaskStatus =

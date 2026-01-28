@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
+from fastapi.responses import FileResponse
 from typing import List
 from datetime import datetime
 from bson import ObjectId
@@ -193,4 +194,40 @@ async def review_task(
 
     result["id"] = str(result.pop("_id"))
     return Task(**result)
+
+
+@router.get("/{task_id}/download")
+async def download_task_file(
+    task_id: str,
+    current_user: User = Depends(require_role(["buyer", "admin"]))
+):
+    """Buyer/Admin: Download submitted task file"""
+    db = get_database()
+
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail="Invalid task ID")
+
+    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # Verify access
+    if current_user.role == "buyer":
+        project = await db.projects.find_one({"_id": ObjectId(task["project_id"])})
+        if not project or project["buyer_id"] != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+    if not task.get("submission_file"):
+        raise HTTPException(status_code=404, detail="No file submitted for this task")
+
+    file_path = task["submission_file"]
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+    filename = os.path.basename(file_path)
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type="application/zip"
+    )
 

@@ -12,6 +12,7 @@ import TaskReviewModal from "@/components/modals/TaskReviewModal";
 import ProjectDetailsModal from "@/components/modals/ProjectDetailsModal";
 import ProjectManagementModal from "@/components/modals/ProjectManagementModal";
 import PlanApprovalModal from "@/components/modals/PlanApprovalModal";
+import SearchBar from "@/components/common/SearchBar";
 import { useToastStore } from "@/store/toastStore";
 import { useAuthStore } from "@/store/authStore";
 
@@ -38,15 +39,22 @@ export default function BuyerDashboard() {
     fetchProjects();
   }, []);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (searchQuery?: string) => {
     try {
-      const response = await api.get("/projects/");
+      const url = searchQuery
+        ? `/projects/search/?q=${encodeURIComponent(searchQuery)}`
+        : "/projects/";
+      const response = await api.get(url);
       setProjects(response.data);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (query: string) => {
+    fetchProjects(query);
   };
 
   const fetchRequests = async (projectId: string) => {
@@ -157,6 +165,19 @@ export default function BuyerDashboard() {
           <Plus className="w-5 h-5" />
           <span>Create Project</span>
         </motion.button>
+      </motion.div>
+
+      {/* Search Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <SearchBar
+          placeholder="Search projects by title or description..."
+          onSearch={handleSearch}
+          className="max-w-2xl"
+        />
       </motion.div>
 
       {/* Stats */}

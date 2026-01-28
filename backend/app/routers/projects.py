@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
 from app.models.project import Project, ProjectCreate, ProjectUpdate
@@ -55,6 +55,21 @@ async def get_projects(current_user: User = Depends(get_current_user)):
     
     async for project in cursor:
         project["id"] = str(project.pop("_id"))
+
+        # Populate buyer details
+        if project.get("buyer_id"):
+            buyer = await db.users.find_one({"_id": ObjectId(project["buyer_id"])})
+            if buyer:
+                project["buyer_email"] = buyer.get("email")
+                project["buyer_name"] = buyer.get("full_name")
+
+        # Populate solver details if assigned
+        if project.get("assigned_solver_id"):
+            solver = await db.users.find_one({"_id": ObjectId(project["assigned_solver_id"])})
+            if solver:
+                project["solver_email"] = solver.get("email")
+                project["solver_name"] = solver.get("full_name")
+
         projects.append(Project(**project))
 
     return projects
@@ -73,6 +88,21 @@ async def get_project(project_id: str, current_user: User = Depends(get_current_
         raise HTTPException(status_code=404, detail="Project not found")
 
     project["id"] = str(project.pop("_id"))
+
+    # Populate buyer details
+    if project.get("buyer_id"):
+        buyer = await db.users.find_one({"_id": ObjectId(project["buyer_id"])})
+        if buyer:
+            project["buyer_email"] = buyer.get("email")
+            project["buyer_name"] = buyer.get("full_name")
+
+    # Populate solver details if assigned
+    if project.get("assigned_solver_id"):
+        solver = await db.users.find_one({"_id": ObjectId(project["assigned_solver_id"])})
+        if solver:
+            project["solver_email"] = solver.get("email")
+            project["solver_name"] = solver.get("full_name")
+
     return Project(**project)
 
 
@@ -213,3 +243,64 @@ async def update_project_deadline(
     
     result["id"] = str(result.pop("_id"))
     return Project(**result)
+
+
+@router.get("/search/", response_model=List[Project])
+async def search_projects(
+    q: Optional[str] = Query(None, description="Search query for title or description"),
+    current_user: User = Depends(get_current_user)
+):
+    """Search projects by title or description"""
+    db = get_database()
+    projects = []
+
+    # Build base query based on user role
+    if current_user.role == "admin":
+        base_query = {}
+    elif current_user.role == "buyer":
+        base_query = {"buyer_id": current_user.id}
+    else:  # problem_solver
+        base_query = {
+            "$or": [
+                {"status": "open"},
+                {"assigned_solver_id": current_user.id}
+            ]
+        }
+
+    # Add search criteria if query provided
+    if q and q.strip():
+        search_query = {
+            "$and": [
+                base_query,
+                {
+                    "$or": [
+                        {"title": {"$regex": q, "$options": "i"}},
+                        {"description": {"$regex": q, "$options": "i"}}
+                    ]
+                }
+            ]
+        }
+    else:
+        search_query = base_query
+
+    cursor = db.projects.find(search_query)
+    async for project in cursor:
+        project["id"] = str(project.pop("_id"))
+
+        # Populate buyer details
+        if project.get("buyer_id"):
+            buyer = await db.users.find_one({"_id": ObjectId(project["buyer_id"])})
+            if buyer:
+                project["buyer_email"] = buyer.get("email")
+                project["buyer_name"] = buyer.get("full_name")
+
+        # Populate solver details if assigned
+        if project.get("assigned_solver_id"):
+            solver = await db.users.find_one({"_id": ObjectId(project["assigned_solver_id"])})
+            if solver:
+                project["solver_email"] = solver.get("email")
+                project["solver_name"] = solver.get("full_name")
+
+        projects.append(Project(**project))
+
+    return projects

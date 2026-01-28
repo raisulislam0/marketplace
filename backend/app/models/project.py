@@ -32,6 +32,10 @@ class Project(ProjectBase):
     status: Literal["open", "assigned", "in_progress", "completed", "cancelled"] = "open"
     created_at: datetime
     updated_at: datetime
+    buyer_email: Optional[str] = None
+    buyer_name: Optional[str] = None
+    solver_email: Optional[str] = None
+    solver_name: Optional[str] = None
 
     model_config = ConfigDict(
         populate_by_name=True,

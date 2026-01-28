@@ -19,6 +19,8 @@ class Request(RequestBase):
     status: Literal["pending", "accepted", "rejected"] = "pending"
     created_at: datetime
     updated_at: datetime
+    solver_email: Optional[str] = None
+    solver_name: Optional[str] = None
 
     model_config = ConfigDict(
         populate_by_name=True,

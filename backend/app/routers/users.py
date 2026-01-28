@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
 from app.models.user import User, UserUpdate, ProblemSolverProfile
@@ -92,6 +92,43 @@ async def update_profile(
     result["id"] = str(result.pop("_id"))
     result.pop("hashed_password", None)
     return User(**result)
+
+
+@router.get("/search/", response_model=List[User])
+async def search_users(
+    q: Optional[str] = Query(None, description="Search query for name or email"),
+    role: Optional[str] = Query(None, description="Filter by role"),
+    current_user: User = Depends(get_current_user)
+):
+    """Search users by name or email"""
+    db = get_database()
+    users = []
+
+    # Build search query
+    query = {}
+
+    # Add role filter if provided
+    if role:
+        query["role"] = role
+
+    # Add text search if query provided
+    if q and q.strip():
+        query["$or"] = [
+            {"full_name": {"$regex": q, "$options": "i"}},
+            {"email": {"$regex": q, "$options": "i"}}
+        ]
+
+    cursor = db.users.find(query)
+    async for user in cursor:
+        user["id"] = str(user.pop("_id"))
+        user.pop("hashed_password", None)
+        try:
+            users.append(User(**user))
+        except Exception as e:
+            print(f"Error processing user {user.get('email', 'unknown')}: {e}")
+            continue
+
+    return users
 
 
 

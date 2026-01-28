@@ -19,6 +19,7 @@ import ProfileModal from "@/components/modals/ProfileModal";
 import ProjectDetailsModal from "@/components/modals/ProjectDetailsModal";
 import ProjectManagementModal from "@/components/modals/ProjectManagementModal";
 import PlanSubmissionModal from "@/components/modals/PlanSubmissionModal";
+import SearchBar from "@/components/common/SearchBar";
 import { useToastStore } from "@/store/toastStore";
 import { useAuthStore } from "@/store/authStore";
 
@@ -41,9 +42,10 @@ export default function ProblemSolverDashboard() {
     fetchProjects();
   }, []);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (searchQuery?: string) => {
     try {
-      const response = await api.get("/projects/");
+      const url = searchQuery ? `/projects/search/?q=${encodeURIComponent(searchQuery)}` : "/projects/";
+      const response = await api.get(url);
       const allProjects = response.data;
       setProjects(allProjects.filter((p: Project) => p.status === "open"));
       setMyProjects(allProjects.filter((p: Project) => p.status !== "open"));
@@ -62,6 +64,10 @@ export default function ProblemSolverDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (query: string) => {
+    fetchProjects(query);
   };
 
   const fetchTasks = async (projectId: string) => {
@@ -184,6 +190,19 @@ export default function ProblemSolverDashboard() {
           <User className="w-5 h-5" />
           <span>Edit Profile</span>
         </motion.button>
+      </motion.div>
+
+      {/* Search Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <SearchBar
+          placeholder="Search projects by title or description..."
+          onSearch={handleSearch}
+          className="max-w-2xl"
+        />
       </motion.div>
 
       {/* Profile Section */}

@@ -130,12 +130,15 @@ export default function ProjectDetailsModal({
                 <div className="flex items-start space-x-3">
                   <UserIcon className="w-5 h-5 text-gray-600 mt-1" />
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Buyer ID
-                    </p>
+                    <p className="text-sm font-medium text-gray-600">Buyer</p>
                     <p className="text-lg font-semibold text-gray-800">
-                      {project.buyer_id}
+                      {project.buyer_name || project.buyer_id}
                     </p>
+                    {project.buyer_email && (
+                      <p className="text-sm text-gray-600">
+                        {project.buyer_email}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -147,8 +150,13 @@ export default function ProjectDetailsModal({
                         Assigned Solver
                       </p>
                       <p className="text-lg font-semibold text-gray-800">
-                        {project.assigned_solver_id}
+                        {project.solver_name || project.assigned_solver_id}
                       </p>
+                      {project.solver_email && (
+                        <p className="text-sm text-gray-600">
+                          {project.solver_email}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

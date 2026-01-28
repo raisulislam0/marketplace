@@ -69,6 +69,14 @@ async def get_project_requests(
     requests = []
     async for req in db.requests.find({"project_id": project_id}):
         req["id"] = str(req.pop("_id"))
+
+        # Populate solver details
+        if req.get("solver_id"):
+            solver = await db.users.find_one({"_id": ObjectId(req["solver_id"])})
+            if solver:
+                req["solver_email"] = solver.get("email")
+                req["solver_name"] = solver.get("full_name")
+
         requests.append(Request(**req))
 
     return requests

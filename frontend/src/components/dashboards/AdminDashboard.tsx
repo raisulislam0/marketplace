@@ -7,10 +7,13 @@ import api from "@/lib/api";
 import { User, Project } from "@/types";
 import ProjectDetailsModal from "@/components/modals/ProjectDetailsModal";
 import ProjectManagementModal from "@/components/modals/ProjectManagementModal";
+import SearchBar from "@/components/common/SearchBar";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetailsModal, setShowProjectDetailsModal] = useState(false);
@@ -28,10 +31,38 @@ export default function AdminDashboard() {
       ]);
       setUsers(usersRes.data);
       setProjects(projectsRes.data);
+      setFilteredUsers(usersRes.data);
+      setFilteredProjects(projectsRes.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUserSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(
+        (user) =>
+          user.full_name.toLowerCase().includes(query.toLowerCase()) ||
+          user.email.toLowerCase().includes(query.toLowerCase()),
+      );
+      setFilteredUsers(filtered);
+    }
+  };
+
+  const handleProjectSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredProjects(projects);
+    } else {
+      const filtered = projects.filter(
+        (project) =>
+          project.title.toLowerCase().includes(query.toLowerCase()) ||
+          project.description.toLowerCase().includes(query.toLowerCase()),
+      );
+      setFilteredProjects(filtered);
     }
   };
 
@@ -106,6 +137,12 @@ export default function AdminDashboard() {
         <h2 className="text-xl font-bold text-gray-800 mb-4">
           User Management
         </h2>
+        <div className="mb-4">
+          <SearchBar
+            placeholder="Search users by name or email..."
+            onSearch={handleUserSearch}
+          />
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -125,7 +162,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {user.full_name}
@@ -183,8 +220,13 @@ export default function AdminDashboard() {
           <h2 className="text-2xl font-bold text-gray-800">
             Projects Overview
           </h2>
+          <SearchBar
+            placeholder="Search projects by title or description..."
+            onSearch={handleProjectSearch}
+            className="max-w-2xl"
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project, index) => (
+            {filteredProjects.map((project, index) => (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, y: 20 }}
