@@ -57,7 +57,7 @@ const PlanSubmissionModal: React.FC<PlanSubmissionModalProps> = ({
     value: any,
   ) => {
     const updated = [...milestones];
-    updated[index][field] = value;
+    updated[index] = { ...updated[index], [field]: value };
     setMilestones(updated);
   };
 
