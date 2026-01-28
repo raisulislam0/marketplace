@@ -12,6 +12,7 @@ import TaskReviewModal from "@/components/modals/TaskReviewModal";
 import ProjectDetailsModal from "@/components/modals/ProjectDetailsModal";
 import ProjectManagementModal from "@/components/modals/ProjectManagementModal";
 import PlanApprovalModal from "@/components/modals/PlanApprovalModal";
+import TaskDownloadModal from "@/components/modals/TaskDownloadModal";
 import SearchBar from "@/components/common/SearchBar";
 import { useToastStore } from "@/store/toastStore";
 import { useAuthStore } from "@/store/authStore";
@@ -23,6 +24,9 @@ export default function BuyerDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [requests, setRequests] = useState<Request[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [projectTasksMap, setProjectTasksMap] = useState<
+    Record<string, Task[]>
+  >({});
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
@@ -30,6 +34,7 @@ export default function BuyerDashboard() {
   const [showProjectDetailsModal, setShowProjectDetailsModal] = useState(false);
   const [showManagementModal, setShowManagementModal] = useState(false);
   const [showPlanApprovalModal, setShowPlanApprovalModal] = useState(false);
+  const [showTaskDownloadModal, setShowTaskDownloadModal] = useState(false);
   const [pendingPlans, setPendingPlans] = useState<any[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [selectedSolverName, setSelectedSolverName] = useState("");
@@ -45,7 +50,32 @@ export default function BuyerDashboard() {
         ? `/projects/search/?q=${encodeURIComponent(searchQuery)}`
         : "/projects/";
       const response = await api.get(url);
-      setProjects(response.data);
+      const projectsData = response.data;
+      setProjects(projectsData);
+
+      // Fetch tasks for all projects
+      const tasksMap: Record<string, Task[]> = {};
+      await Promise.all(
+        projectsData.map(async (project: Project) => {
+          if (project.status !== "open") {
+            try {
+              const tasksResponse = await api.get(
+                `/tasks/project/${project.id}`,
+              );
+              tasksMap[project.id] = tasksResponse.data;
+            } catch (error) {
+              console.error(
+                `Failed to fetch tasks for project ${project.id}:`,
+                error,
+              );
+              tasksMap[project.id] = [];
+            }
+          } else {
+            tasksMap[project.id] = [];
+          }
+        }),
+      );
+      setProjectTasksMap(tasksMap);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     } finally {
@@ -131,9 +161,16 @@ export default function BuyerDashboard() {
       if (selectedProject) {
         fetchTasks(selectedProject.id);
       }
+      // Refresh all project tasks
+      fetchProjects();
     } catch (error) {
       console.error("Failed to review task:", error);
     }
+  };
+
+  const handleTasksClick = (project: Project) => {
+    setSelectedProject(project);
+    setShowTaskDownloadModal(true);
   };
 
   if (loading) {
@@ -244,8 +281,9 @@ export default function BuyerDashboard() {
               project={project}
               onClick={() => handleProjectClick(project)}
               index={index}
-              tasks={selectedProject?.id === project.id ? tasks : []}
+              tasks={projectTasksMap[project.id] || []}
               onReviewTask={handleReviewTask}
+              onTasksClick={handleTasksClick}
             />
           ))}
         </div>
@@ -313,6 +351,13 @@ export default function BuyerDashboard() {
           }}
         />
       )}
+
+      <TaskDownloadModal
+        isOpen={showTaskDownloadModal}
+        onClose={() => setShowTaskDownloadModal(false)}
+        tasks={selectedProject ? projectTasksMap[selectedProject.id] || [] : []}
+        projectTitle={selectedProject?.title || ""}
+      />
     </div>
   );
 }
