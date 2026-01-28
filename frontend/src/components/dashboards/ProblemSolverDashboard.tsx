@@ -44,7 +44,9 @@ export default function ProblemSolverDashboard() {
 
   const fetchProjects = async (searchQuery?: string) => {
     try {
-      const url = searchQuery ? `/projects/search/?q=${encodeURIComponent(searchQuery)}` : "/projects/";
+      const url = searchQuery
+        ? `/projects/search/?q=${encodeURIComponent(searchQuery)}`
+        : "/projects/";
       const response = await api.get(url);
       const allProjects = response.data;
       setProjects(allProjects.filter((p: Project) => p.status === "open"));
@@ -442,7 +444,6 @@ export default function ProblemSolverDashboard() {
           }}
         />
       )}
-      />
     </div>
   );
 }
