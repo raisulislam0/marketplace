@@ -52,13 +52,15 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
-    
+
     db = get_database()
     user = await db.users.find_one({"email": token_data.email})
     if user is None:
         raise credentials_exception
-    
-    user["id"] = str(user["_id"])
+
+    # Convert _id to id and remove hashed_password before creating User object
+    user["id"] = str(user.pop("_id"))
+    user.pop("hashed_password", None)
     return User(**user)
 
 
