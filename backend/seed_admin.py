@@ -8,6 +8,7 @@ from datetime import datetime
 from passlib.context import CryptContext
 import os
 from dotenv import load_dotenv
+import certifi
 
 load_dotenv()
 
@@ -17,8 +18,15 @@ async def create_admin():
     # Connect to MongoDB
     mongodb_url = os.getenv("MONGODB_URL")
     database_name = os.getenv("DATABASE_NAME", "marketplace")
-    
-    client = AsyncIOMotorClient(mongodb_url)
+
+    # Configure MongoDB connection with SSL/TLS settings
+    client = AsyncIOMotorClient(
+        mongodb_url,
+        tlsCAFile=certifi.where(),
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=10000,
+        socketTimeoutMS=20000,
+    )
     db = client[database_name]
     
     # Admin user details
