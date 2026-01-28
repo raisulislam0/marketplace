@@ -26,6 +26,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "*",
+        "https://marketplace-beta-sooty-37.vercel.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
