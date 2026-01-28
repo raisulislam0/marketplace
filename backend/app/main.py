@@ -33,7 +33,10 @@ app.add_middleware(
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
         "http://localhost:8000",
-        "http://127.0.0.1:8000"
+        "http://127.0.0.1:8000",
+        # Production frontend URLs - update these with your actual frontend URLs
+        "https://marketplace-f9x1.onrender.com",  # If frontend is also on Render
+        # Add your Vercel/Netlify frontend URL here when deployed
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
