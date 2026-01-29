@@ -2,6 +2,9 @@
 
 A full-stack role-based project marketplace workflow system built with **Next.js**, **FastAPI**, and **MongoDB**.
 
+Live Link: https://marketplace-beta-sooty-37.vercel.app/login
+Admin: raisul@gmail.com | pass: raisul
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
